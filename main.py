@@ -4,6 +4,8 @@
 # Direct port of the Arduino NeoPixel library strandtest example.  Showcases
 # various animations on a strip of NeoPixels.
 import time
+import signal, os
+import sys
 
 import Adafruit_DHT
 from neopixel import *
@@ -87,6 +89,11 @@ def set_pixels(strip, image):
 	for idx, pix in enumerate(image):
 		strip.setPixelColor(idx, Color(*pix))
 
+def clear(strip):
+	for idx in range(LED_COUNT):
+		strip.setPixelColor(idx, Color(0,0,0))
+	strip.show()
+
 
 def output_text(strip, text, icon_name=None):
 	image = render_text(text, icon_name)
@@ -99,6 +106,16 @@ if __name__ == '__main__':
 	strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
 	# Intialize the library (must be called once before other functions).
 	strip.begin()
+
+	def handler(signum, frame):
+		if signum in [signal.SIGTERM, signal.SIGINT]:
+			print "NOW Shuting down!"
+                        clear(strip)
+			time.sleep(1)
+			sys.exit(0)
+
+	signal.signal(signal.SIGINT, handler)
+	signal.signal(signal.SIGTERM, handler)
 
 	myip = get_ip()
 	output_text(strip, "IP %s" % myip.split('.')[-1])
@@ -127,4 +144,4 @@ if __name__ == '__main__':
 			strip.show()
 			time.sleep(1)
 
-time.sleep(1)
+
